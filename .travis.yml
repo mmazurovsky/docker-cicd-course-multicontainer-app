@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t mmazurovsky/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true mmazurovsky/react-test npm test
+
+after_success:
+  - docker build -t mmazurovsky/multi-client ./client
+  - docker build -t mmazurovsky/multi-nginx ./nginx
+  - docker build -t mmazurovsky/multi-server ./server
+  - docker build -t mmazurovsky/multi-worker ./worker
+  # log in to the Docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # push images to Docker Hub
+  - docker push mmazurovsky/multi-client
+  - docker push mmazurovsky/multi-nginx
+  - docker push mmazurovsky/multi-server
+  - docker push mmazurovsky/multi-worker
+  
